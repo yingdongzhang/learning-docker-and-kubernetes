@@ -10,10 +10,6 @@ metadata:
 spec:
   containers:
   - name: client
-    image: stephengrider/multi-client
-    resources:
-      limits:
-        memory: "128Mi"
-        cpu: "500m"
+    image: dropzone/multi-containers-client
     ports:
       - containerPort: 3000
