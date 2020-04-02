@@ -3,19 +3,19 @@ services:
   - docker
 
 before_install:
-  - docker build -t dz/react-test -f ./client/Dockerfile.dev ./client
+  - docker build -t dropzone/react-test -f ./client/Dockerfile.dev ./client
 
 script:
-  - docker run dz/react-test npm test -- --coverage
+  - docker run dropzone/react-test npm test -- --coverage
 
 after_success:
-  - docker build -t dz/multi-containers-client ./client
-  - docker build -t dz/multi-containers-nginx ./nginx
-  - docker build -t dz/multi-containers-server ./server
-  - docker build -t dz/multi-containers-worker ./worker
+  - docker build -t dropzone/multi-containers-client ./client
+  - docker build -t dropzone/multi-containers-nginx ./nginx
+  - docker build -t dropzone/multi-containers-server ./server
+  - docker build -t dropzone/multi-containers-worker ./worker
   # Login to docker CLI
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
-  - docker push dz/multi-containers-client
-  - docker push dz/multi-containers-nginx
-  - docker push dz/multi-containers-server
-  - docker push dz/multi-containers-worker
+  - docker push dropzone/multi-containers-client
+  - docker push dropzone/multi-containers-nginx
+  - docker push dropzone/multi-containers-server
+  - docker push dropzone/multi-containers-worker
