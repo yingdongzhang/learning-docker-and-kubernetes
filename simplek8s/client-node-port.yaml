@@ -1,0 +1,17 @@
+# NodePort: expose container to the outside world
+# Only good for dev purpose
+# Selector must match an existing object definition
+# Services: ClusterIP, NodePort, LoadBalancer, Ingress
+
+apiVersion: v1
+kind: Service # Setup networking in k8s cluster
+metadata:
+  name: client-node-port
+spec:
+  type: NodePort
+  selector:
+    component: web
+  ports:
+  - port: 3050 # the port that another pod or another container can have access to the app
+    targetPort: 3000 # the port to forward incoming traffic to
+    nodePort: 31515 # the port that opens to the outside world

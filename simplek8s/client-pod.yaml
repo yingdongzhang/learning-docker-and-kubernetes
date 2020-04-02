@@ -1,0 +1,19 @@
+# Label-Selector system
+# labels can be arbitrary
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client-pod
+  labels:
+    component: web
+spec:
+  containers:
+  - name: client
+    image: stephengrider/multi-client
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+    ports:
+      - containerPort: 3000
