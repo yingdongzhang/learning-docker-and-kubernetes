@@ -37,6 +37,7 @@
 1. [Jobs](#jobs)
 1. [Services](#services)
 1. [Networking](#networking)
+1. [Stateful Set](#stateful-set)
 
 # <a name="components"></a>
 # Components
@@ -1033,3 +1034,6 @@ spec:
 `kubectl get ingress`
 
 * Default backend
+
+# <a name="stateful-set"></a>
+# Stateful Set
