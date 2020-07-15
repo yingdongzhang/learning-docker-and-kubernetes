@@ -29,3 +29,20 @@ Type of secrets:
 * generic
 * docker-registry
 * tls
+
+# Load Balancer
+Legacy way of getting network traffic into a cluster. Sits in front of a set of pods within a deployment
+
+# Ingress Service
+Exposes a set of services to the outside world
+* ingress-nginx: a project led by k8s community
+* kubernetes-ingress: a project led by Nginx company
+
+## Ingress config
+Object that has a set of configuration rules describing how traffic should be routed
+
+## Ingress Controller
+Watches for changes to the ingress and updates the 'thing' that handles traffic
+
+# Minikube dashboard
+`minikube dashboard`
