@@ -1,4 +1,4 @@
-# **k8s learning notes**
+# k8s learning notes
 
 1. [Components](#components)
     1. [Scheduler](#scheduler)
@@ -19,7 +19,8 @@
     1. [Edit Deployment](#edit-deployment)
 1. [Pod](#pod)
 1. [Deployment](#deployment)
-1. [Service](#service)
+1. [Namespaces](#namespaces)
+1. [Services](#services)
 1. [Commands and Arguments](#commands-arguments)
 1. [Environment Variables](#environment-variables)
     1. [ConfigMap](#configmap)
@@ -35,20 +36,19 @@
 1. [Pod Design](#pod-design)
 1. [Updates and Rollbacks](#updates-rollbacks)
 1. [Jobs](#jobs)
-1. [Services](#services)
 1. [Networking](#networking)
 1. [Stateful Set](#stateful-set)
 
-# <a name="components"></a>
+<a name="components"></a>
 # Components
-## <a name="scheduler"></a>
+<a name="scheduler"></a>
 ## Scheduler
 
 Distributes work across nodes
 
-## <a name="node"></a>
+<a name="node"></a>
 ## Node
-### <a name="worker-node"></a>
+<a name="worker-node"></a>
 ### Worker node
 
 - Hosts containers
@@ -61,7 +61,7 @@ Distributes work across nodes
 
 	- the smallest unit in the cluster
 
-### <a name="master-node"></a>
+<a name="master-node"></a>
 ### Master node
 
 - kube-apiserver
@@ -72,43 +72,44 @@ Distributes work across nodes
 
 - scheduler
 
-## <a name="replica-sets"></a>
+<a name="replica-sets"></a>
 ## ReplicaSets
 
 - Create multiple instances of pods
 
 - Can monitor existing pods
 
-## <a name="controller"></a>
+<a name="controller"></a>
 ## Replication Controller(older)
 ## Controller
 Brain behind orchestration
 
-## <a name="container-runtime"></a>
+<a name="container-runtime"></a>
 ## Container Runtime
 
-## <a name="cluster"></a>
+<a name="cluster"></a>
 ## Cluster
 
 A group of nodes
 
-## <a name="api-server"></a>
+<a name="api-server"></a>
 ## API Server
 
 FE/Terminal of the k8s cluster
 
-## <a name="etcd"></a>
+<a name="etcd"></a>
 ## etcd
 
 Distributed across all nodes key-value store to store data
 
-## <a name="kubelet"></a>
+<a name="kubelet"></a>
 ## kubelet
 
 Agent on each node, control containers
 
-## <a name="kubectl"></a>
-## kubectl
+----
+<a name="kubectl"></a>
+# kubectl
 
 Run container with interactive mode:
 `kubectl exec -it <pod-name> -- <command>`
@@ -135,7 +136,7 @@ Run container with interactive mode:
 
 `get all`
 
-# <a name="imperative-commands"></a>
+<a name="imperative-commands"></a>
 # Tip: Imperative Commands
 While you would be working mostly the declarative way - using definition files, imperative commands can help in getting one time tasks done quickly, as well as generate a definition template easily. This would help save a considerable amount of time during your exams.
 
@@ -146,7 +147,7 @@ Before we begin, familiarize with the two options that can come in handy while w
 
 Use the above two in combination to generate a resource definition file quickly, that you can then modify and create resources as required, instead of creating the files from scratch.
 
-# <a name="tip-kubectl"></a>
+<a name="tip-kubectl"></a>
 # Tip: Formatting Output with kubectl
 The default output format for all kubectl commands is the human-readable plain-text format.
 
@@ -209,7 +210,7 @@ redis     1/1     Running   0          3m59s   10.36.0.1   node01   <none>      
 master $
 ```
 
-## <a name="edit-pod"></a>
+<a name="edit-pod"></a>
 ## Edit a POD
 Remember, you CANNOT edit specifications of an existing POD other than the below.
 
@@ -251,15 +252,15 @@ Then create a new pod with the edited file
 
 `kubectl create -f my-new-pod.yaml`
 
-## <a name="edit-deployment"></a>
+<a name="edit-deployment"></a>
 ## Edit Deployments
 With Deployments you can easily edit any field/property of the POD template. Since the pod template is a child of the deployment specification,  with every change the deployment will automatically delete and create a new pod with the new changes. So if you are asked to edit a property of a POD part of a deployment you may do that simply by running the command
 
 `kubectl edit deployment my-deployment`
 
-
-## <a name="pod"></a>
-## POD
+----
+<a name="pod"></a>
+# Pod
 Create an NGINX Pod
 
 `kubectl run nginx --image=nginx`
@@ -268,8 +269,9 @@ Generate POD Manifest YAML file (-o yaml). Don't create it(--dry-run)
 
 `kubectl run nginx --image=nginx  --dry-run=client -o yaml`
 
-## <a name="deployment"></a>
-## Deployment
+----
+<a name="deployment"></a>
+# Deployment
 Create a deployment
 
 `kubectl create deployment --image=nginx nginx`
@@ -288,8 +290,102 @@ Save it to a file - (If you need to modify or add some other details)
 
 You can then update the YAML file with the replicas or any other field before creating the deployment.
 
-## <a name="service"></a>
-## Service
+----
+<a name="namespaces"></a>
+# Namespaces
+Pods, deployments and services live in a namespace.
+
+K8s includes:
+* a `default` namespace
+* a `kube-system` namesapce for internal components
+* a `kube-public` namespace, resources made available to all users
+
+Resources within the same namespace can refer to each other simply by using their names.
+
+To refer to resources in other namespaces use the full DNS name in the format: `[service-name].[namespace].[service].[domain]` for example`db-service.dev.svc.cluster.local`
+
+To list pods in a namespace:
+`kubectl get pods -n <namespace>` or `--namespace`
+
+To create an object with a custom namespace, include the namespace in the metadata:
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod
+  namespace: dev
+  labels:
+    app: myapp
+spec:
+  containers:
+    - name: my-app-container
+      image: nginx
+```
+
+### Switch to namespace
+`kubectl config set-context $(kubectl config current-context) --namespace=dev`
+
+### List all pods in all namespaces
+`kubectl get pods --all-namespaces`
+
+----
+<a name="services"></a>
+# Services
+Enable communication between components within and outside of the application. Enable loose coupling between microservices.
+
+* NodePort: listens to a port on the node and forward the request to a port on the pod running the application
+* ClusterIP: virtual IP for internal communication
+* LoadBalancer: distributes loads
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-service
+spec:
+  type: NodePort
+  ports:
+    - nodePort: 3008
+      targetPort: 80
+      port: 80
+  selector:
+    app: myapp
+    type: front-end
+```
+
+`kubectl create -f service.yaml`
+
+## NodePort
+Maps a port on the node to a port on the pod.
+
+3 ports involved:
+* TargetPort: port on the node
+* Port: port of the Service
+* NodePort: port of the node
+
+When multiple pods have the same labels, the Service select all the pods as endpoints to receive requests, it uses random algorithm to distribute loads across pods.
+
+When pods are distributed across multiple nodes, k8s automatically creates a Service that spans across all the nodes and map the targetPort to the same node port on all the nodes in the cluster.
+
+## ClusterIP
+Enables communication inside the cluster, enables loose coupling between components.
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: back-end-service
+spec:
+  type: ClusterIP
+  ports:
+    - targetPort: 80
+      port: 80
+  selector:
+    app: my-app
+    type: back-end
+```
+
+`kubectl create -f service.yaml`
+
 Create a Service named redis-service of type ClusterIP to expose pod redis on port 6379
 
 `kubectl expose pod redis --port=6379 --name redis-service --dry-run=client -o yaml`
@@ -314,7 +410,8 @@ Or
 
 Both the above commands have their own challenges. While one of it cannot accept a selector the other cannot accept a node port. I would recommend going with the `kubectl expose` command. If you need to specify a node port, generate a definition file using the same command and manually input the nodeport before creating the service.
 
-# <a name="commands-arguments"></a>
+----
+<a name="commands-arguments"></a>
 # Commands and Arguments
 ```yaml
 apiVersion: v1
@@ -329,7 +426,8 @@ spec:
       args: ["10"] # -> CMD in Dockerfile
 ```
 
-# <a name="environment-variables"></a>
+----
+<a name="environment-variables"></a>
 # Environment Variable
 
 ## Key value pair
@@ -347,7 +445,7 @@ spec:
           value: pink
 ```
 
-## <a name="configmap"></a>
+<a name="configmap"></a>
 ## ConfigMap
 1. Create ConfigMap
     1. Imperative: `kubectl create configmap <config-name> --from-literal=<key>=<value>`, `--from-file=<path-to-file>`
@@ -394,7 +492,7 @@ volumes:
 
 `kubectl describe configmaps`
 
-## <a name="secret-keys"></a>
+<a name="secret-keys"></a>
 ## Secret Keys
 For storing sensitive data
 1. Create Secret
@@ -443,7 +541,8 @@ volumes:
 
 `kubectl describe secrets`
 
-# <a name="security-contexts"></a>
+----
+<a name="security-contexts"></a>
 # Security Contexts
 ## Docker Security
 Process running in the container can be seen in the host too
@@ -497,7 +596,7 @@ spec:
           add: ["NET_ADMIN", "SYS_TIME"]
 ```
 
-## <a name="service-account"></a>
+<a name="service-account"></a>
 ## Service Account
 `kubectl create serviceaccount <service-account-name>`
 
@@ -511,7 +610,8 @@ Service accounts are generated with a token, which will be used as an authentica
 automountServiceAccountToken: false
 ```
 
-# <a name="resource-requirements-limits"></a>
+----
+<a name="resource-requirements-limits"></a>
 # Resource Requirements & Limits
 
 * CPU
@@ -534,7 +634,8 @@ spec:
 
 A container cannot use the CPU more than the limit. A container can use more memory than the limit but will be terminated if it goes beyond limits constantly.
 
-# <a name="taints-tolerations"></a>
+----
+<a name="taints-tolerations"></a>
 # Taints and Tolerations
 ## Taints
 Restrict nodes to accept certain pods
@@ -566,7 +667,8 @@ spec:
 
 **Note: the Master node does not schedule any pods**
 
-# <a name="node-selectors"></a>
+----
+<a name="node-selectors"></a>
 # Node Selectors
 
 Labels for node
@@ -578,7 +680,7 @@ nodeSelector:
 
 `kubectl label nodes <node-name> <key>=<value>`
 
-# <a name="node-affinity"></a>
+<a name="node-affinity"></a>
 # Node Affinity
 
 Ensure that pods are hosted on a particular node
@@ -609,7 +711,8 @@ Planned:
 * Use Taints & Tolerations to prevent other pods being placed on to certain nodes.
 * Use Node Affinity to prevent certain pods on certain nodes.
 
-# <a name="observability"></a>
+----
+<a name="observability"></a>
 # Observability
 ## Readiness and Liveness Probes
 ### Readiness Probes
@@ -662,7 +765,7 @@ containers:
 
 `kubectl logs -f <pod-name> <container-name>`
 
-## <a name="monitoring-debugging"></a>
+<a name="monitoring-debugging"></a>
 ## Monitoring and Debugging
 ### Metric Server
 **minikube**: `minikube addons enable metrics-server`
@@ -672,7 +775,8 @@ containers:
 
 `kubectl top pod` - performance metrics of pods
 
-# <a name="pod-design"></a>
+----
+<a name="pod-design"></a>
 # Pod Design
 ## Labels, Selectors and Annotations
 
@@ -724,7 +828,7 @@ metadata:
     buildversion: 1.34
 ```
 
-## <a name="updates-rollbacks"></a>
+<a name="updates-rollbacks"></a>
 ## Rolling Updates & Rollbacks in Deployments
 ### Rollout and Versioning
 When you first create a deployment it triggers a new rollout. A new rollout creates a new deployment revision. Future rollouts create new deployment revisions.
@@ -862,13 +966,14 @@ master $ kubectl describe deployments. nginx | grep -i image:
 
 With this, we have rolled back to the previous version of the deployment with the image = nginx:1.17
 
-## <a name="jobs"></a>
-## Jobs
+----
+<a name="jobs"></a>
+# Jobs
 Pods are meant to be running forever. By defaulk k8s the restartPolicy for pods is "Always".
 
 A job is used to run a set of pods to perform given task to completion.
 
-### Job Definition
+## Job Definition
 ```yaml
 apiVersion: batch/v1
 kind: Job
@@ -886,7 +991,7 @@ spec:
       restartPolicy: Never
 ```
 
-### CronJobs
+## CronJobs
 ```yaml
 apiVersion: batch/v1beta1
 kind: CronJob
@@ -906,75 +1011,26 @@ spec:
           restartPolicy: Never
 ```
 
-# <a name="services"></a>
-# Services
-Enable communication between components within and outside of the application. Enable loose coupling between microservices.
+----
+<a name="networking"></a>
+# Ingress Networking
 
-* NodePort: listens to a port on the node and forward the request to a port on the pod running the application
-* ClusterIP: virtual IP for internal communication
-* LoadBalancer: distributes loads
+Ingress helps your users access your application using a single externally accessible URL that you can configure to route to different services within your cluster based on the URL part and at the same time implement SSL security as well.
 
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: my-service
-spec:
-  type: NodePort
-  ports:
-    - nodePort: 3008
-      targetPort: 80
-      port: 80
-  selector:
-    app: myapp
-    type: front-end
-```
-
-`kubectl create -f service.yaml`
-
-## NodePort
-Maps a port on the node to a port on the pod.
-
-3 ports involved:
-* TargetPort: port on the node
-* Port: port of the Service
-* NodePort: port of the node
-
-When multiple pods have the same labels, the Service select all the pods as endpoints to receive requests, it uses random algorithm to distribute loads across pods.
-
-When pods are distributed across multiple nodes, k8s automatically creates a Service that spans across all the nodes and map the targetPort to the same node port on all the nodes in the cluster.
-
-## ClusterIP
-Enables communication inside the cluster, enables loose coupling between components.
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: back-end-service
-spec:
-  type: ClusterIP
-  ports:
-    - targetPort: 80
-      port: 80
-  selector:
-    app: my-app
-    type: back-end
-```
-
-`kubectl create -f service.yaml`
-
-## <a name="networking"></a>
-## Ingress Networking
 Route traffice to different services based on url path and implement ssl security. Layer 7 load balancer that is built-in to k8s cluster.
 
-### Ingress Controller
+## Ingress Controller
 K8s does not come with a ingress controller by default. There are different options of ingress controllers such as Nginx Ingress Controller.
 * A NodePort service is required to expose it.
 * A ConfigMap is required to feed Nginx service config data.
 * A ServiceAccount is required to config the right roles and permissions.
 
-### Ingress Resources
+To setup an Ingress Controller, we need a Service(NodePort) to expose it, a config(ConfigMap) to feed configuration data and a ServiceAccount with the right permissions to access all of these objects.
+
+## Ingress Resources
 A set of rules and permissions that are set on the ingress controller created using definition files.
+
+`kubectl get ingress --all-namespaces`
 
 ```yaml
 apiVersion: extensions/v1beta1
@@ -1033,7 +1089,97 @@ spec:
 
 `kubectl get ingress`
 
-* Default backend
+## Network Policy
 
-# <a name="stateful-set"></a>
+Ingress & Egress rules
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: db-policy
+spec:
+  podSelector:
+    matchLabels:
+      role: db
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+      - podSelector:
+        matchLabels:
+          name: api-pod
+      ports:
+        - protocol: TCP
+          port: 3306
+```
+
+----
+<a name="stateful-set"></a>
 # Stateful Set
+
+Similar to deployment sets, but pods are created in a sequential order. After the first pod is deployed it is must be ready and in a running state before the next pod is deployed.
+
+In a main-replica set up, we always want the main instance to be set up first, then set up replica 1, then replica 2, etc.
+
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mysql
+  serviceName: mysql-h # name of a headless service
+```
+
+Default behaviour is sequential, can be changed to parallel.
+
+## Headless Services
+Scenario: write only to the main database instance not replicas.
+
+A service that does not load balance requests but gives us a DNS entry to reach each pod. Created as a normal service but does not have an IP by its own, but creates a DNS entry for the pod: `podname.headless-servicename.namespace.svc.cluster-domain.example`
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-h
+spec:
+  ports:
+    - port: 3306
+  selector:
+    app: mysql
+  clusterIP: None # headless service
+```
+
+### Within a Deployment
+subdomain or hostname must be set
+
+pod:
+```yaml
+...
+spec:
+  containers:
+    - name: mysql
+      image: mysql
+  subdomain: mysql-h # must be present for headless service to create DNS entry
+  hostname: mysql-pod # must be present for headless service to create DNS entry
+```
+
+### Within a StatefulSet
+When creating a StatefulSet you do not need to specifcy the subdomain or hostname, the StatefulSet automatically assigns the right hostname for each pod based on the pod name and it automatically assigns the right subdomain based on the headless service name.
+
+You must specify the `serviceName` in the definition.
